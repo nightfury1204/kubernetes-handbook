@@ -1,0 +1,24 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: curl
+  labels:
+    name: curl
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: curl
+    spec:
+      containers:
+      - name: curl
+        image: nightfury1204/alpine-curl
+        command:
+          - "sh"
+          - "-c"
+          - >
+            while true; do
+              sleep 3600;
+            done
+
