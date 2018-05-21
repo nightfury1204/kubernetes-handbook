@@ -13,7 +13,7 @@ spec:
   template:
     metadata:
       labels:
-        name: curl
+        app: curl
     spec:
       containers:
       - name: curl
