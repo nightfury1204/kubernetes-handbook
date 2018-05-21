@@ -5,6 +5,10 @@ metadata:
   labels:
     name: curl
 spec:
+  serviceName: "curl"
+  selector:
+      matchLabels:
+        app: curl
   replicas: 1
   template:
     metadata:
