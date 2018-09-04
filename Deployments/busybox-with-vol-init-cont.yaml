@@ -1,0 +1,51 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: try-busybox
+  labels:
+    name: try
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: try
+    spec:
+      initContainers:
+      - name: config
+        image: busybox
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            cat > /etc/vault.hcl <<EOF
+            listener "tcp" {
+              address = "0.0.0.0:8200"
+              tls_cert_file = "/etc/vault/tls/vault.pem"
+              tls_key_file = "/etc/vault/tls/vault-key.pem"
+              tls_min_version = "tls12"
+            }
+            storage "gcs" {
+              bucket = "no"
+              ha_enabled = "true"
+            }
+            ui = true
+            EOF
+        volumeMounts:
+          - name: data
+            mountPath: /etc
+      containers:
+      - name: busybox
+        image: busybox
+        command:
+        - "sh"
+        - "-c"
+        - >
+          while true; do
+            sleep 3600;
+          done
+        volumeMounts:
+        - mountPath: /etc
+          name: data
+      volumes:
+      - name: data
+        emptyDir: {}

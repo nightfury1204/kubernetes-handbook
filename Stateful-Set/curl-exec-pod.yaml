@@ -7,8 +7,8 @@ metadata:
 spec:
   serviceName: "curl"
   selector:
-      matchLabels:
-        app: curl
+    matchLabels:
+      app: curl
   replicas: 1
   template:
     metadata:
