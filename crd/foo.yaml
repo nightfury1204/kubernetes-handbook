@@ -1,0 +1,6 @@
+apiVersion: try.com/v1alpha1
+kind: Foo
+metadata:
+  name: my-foo
+status:
+  hello: world
