@@ -39,3 +39,76 @@ stable/mariadb                  	5.3.1        	10.1.37    	Fast, reliable, scala
 ```commandline
 helm install stable/mysql --name try --tiller-namespace demo
 ```
+
+```commandline
+ helm install stable/mysql --name try --tiller-namespace demo
+```
+
+```commandline
+helm get values try --tiller-namespace demo
+```
+
+```commandline
+helm delete try --tiller-namespace demo
+```
+
+```commandline
+helm upgrade -f panda.yaml happy-panda stable/mariadb
+```
+
+```yaml
+$ helm history try --tiller-namespace demo
+
+REVISION	UPDATED                 	STATUS 	CHART       	DESCRIPTION      
+1       	Mon Jan 14 17:34:04 2019	DELETED	mysql-0.12.0	Deletion complete
+
+```
+
+```commandline
+helm rollback try 1 --tiller-namespace demo
+```
+
+```commandline
+$ helm list --tiller-namespace demo
+NAME	REVISION	UPDATED                 	STATUS  	CHART       	APP VERSION	NAMESPACE
+try 	2       	Mon Jan 14 17:56:40 2019	DEPLOYED	mysql-0.12.0	5.7.14     	default
+```
+
+```commandline
+$ helm list --deleted --tiller-namespace demo
+
+NAME	REVISION	UPDATED                 	STATUS 	CHART       	APP VERSION	NAMESPACE
+try 	2       	Mon Jan 14 17:56:40 2019	DELETED	mysql-0.12.0	5.7.14     	default
+```
+
+
+## How to create helm chart
+
+```commandline
+helm create mychart
+```
+
+```commandline
+helm package helm/chart/mychart
+```
+
+```commandline
+helm lint helm/chart/mychart
+```
+
+```commandline
+helm install ./mychart-0.1.0.tgz --name busybox
+```
+
+```commandline
+helm install ./mychart-0.1.0.tgz --name busybox --set echo="no world"
+```
+
+```commandline
+helm get values busybox
+```
+
+it also clear it from the `helm list`
+```commandline
+helm delete busybox --purge
+```
