@@ -1,0 +1,39 @@
+# List of sources to populate environment variables in the container.
+# The keys defined within a source must be a C_IDENTIFIER.
+# All invalid keys will be reported as an event when the container is starting.
+# When a key exists in multiple sources, the value associated with the last source will take precedence.
+# Values defined by an Env with a duplicate key will take precedence. Cannot be updated.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: default
+  name: test-config
+data:
+  TEST: "CONFIGMAP_VALUE"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busy
+  namespace: default
+spec:
+  containers:
+  - name: busybox
+    image: busybox
+    env:
+    - name: TEST
+      value: "DEFAULT_VAULT"
+    - name: TEST
+      valueFrom:
+        configMapKeyRef:
+          name: test-config
+          key: TEST
+    command:
+    - "sh"
+    - "-c"
+    - >
+      while true; do
+        echo "$(TEST)";
+        sleep 3600;
+      done
