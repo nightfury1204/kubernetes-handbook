@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alert-rule-config
+  labels:
+    app: alertmanager-demo
+  namespace: monitoring
+data:
+  test.yaml: |-
+    groups:
+    - name: example
+      interval: 30s
+      rules:
+      - alert: DeadMansSwitch
+        expr: kubelet_running_pod_count > 10
+        for: 10s
+        labels:
+          severity: page
+        annotations:
+          summary: High number of pods
