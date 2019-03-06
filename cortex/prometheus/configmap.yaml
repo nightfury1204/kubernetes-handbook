@@ -11,7 +11,7 @@ data:
       scrape_interval: 30s
       scrape_timeout: 10s
     remote_write:
-    - url: http://distributor.default.svc/api/prom/push
+    - url: http://nginx.default.svc:80/api/prom/push
     scrape_configs:
     #------------- configuration to collect pods metrics -------------------
     - job_name: 'kubernetes-pods'
