@@ -8,6 +8,7 @@ spec:
   containers:
   - name: busybox
     image: busybox
+    imagePullPolicy: IfNotPresent
     env:
     - name: TT_T
       value: "2"
