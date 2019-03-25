@@ -1,0 +1,27 @@
+apiVersion: operator.m3db.io/v1alpha1
+kind: M3DBCluster
+metadata:
+  name: simple-cluster
+  namespace: demo
+spec:
+  image: quay.io/m3db/m3dbnode:latest
+  replicationFactor: 1
+  numberOfShards: 16
+  isolationGroups:
+    - name: us-central1-a
+      numInstances: 1
+  podIdentityConfig:
+    sources: []
+  namespaces:
+    - name: metrics-unagg
+      options:
+        bootstrapEnabled: true
+        flushEnabled: true
+        writesToCommitLog: true
+        cleanupEnabled: true
+        snapshotEnabled: true
+        retentionOptions:
+          retentionPeriod: 300s
+          blockSize: 300s
+    - name: metrics
+      preset: 1m:40d

@@ -1,0 +1,53 @@
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: fast-us-central1-a
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-ssd
+  zone: us-central1-a
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: fast-us-central1-b
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-ssd
+  zone: us-central1-b
+---
+apiVersion: operator.m3db.io/v1alpha1
+kind: M3DBCluster
+metadata:
+  name: simple-cluster
+  namespace: demo
+spec:
+  image: quay.io/m3db/m3dbnode:latest
+  replicationFactor: 2
+  numberOfShards: 16
+  isolationGroups:
+    - name: us-central1-a
+      numInstances: 1
+      storageClassName: fast-us-central1-a
+    - name: us-central1-b
+      numInstances: 1
+      storageClassName: fast-us-central1-b
+  namespaces:
+    - name: metrics-10s:2d
+      preset: 10s:2d
+  podIdentityConfig:
+    # Using no sources will default to just PodName, which is what we want as
+    # remote PVs can move around with the pod
+    sources: []
+  dataDirVolumeClaimTemplate:
+    metadata:
+      name: m3db-data
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      # this field will be overwritten per-statefulset
+      storageClassName: unused
+      resources:
+        requests:
+          storage: 20Gi

@@ -1,0 +1,33 @@
+apiVersion: operator.m3db.io/v1alpha1
+kind: M3DBCluster
+metadata:
+  name: simple-cluster
+  namespace: demo
+spec:
+  image: quay.io/m3db/m3dbnode:latest
+  replicationFactor: 1
+  numberOfShards: 16
+  isolationGroups:
+    - name: us-central1-a
+      numInstances: 1
+    - name: us-central1-b
+      numInstances: 1
+  podIdentityConfig:
+    # Using no sources will default to just PodName, which is what we want as
+    # remote PVs can move around with the pod
+    sources: []
+  namespaces:
+    - name: metrics-10s:2d
+      preset: 10s:2d
+  dataDirVolumeClaimTemplate:
+    metadata:
+      name: m3db-data
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: standard
+      resources:
+        requests:
+          storage: 1Gi
+        limits:
+          storage: 1Gi

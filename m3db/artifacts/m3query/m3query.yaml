@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: m3query
+  namespace: demo
+spec:
+  selector:
+    app: m3query
+  ports:
+    - port: 7201
+      protocol: TCP
+      name: client
+    - port: 7203
+      protocol: TCP
+      name: metric
+  type: ClusterIP
+---
+# Source: m3db-operator/templates/stateful_set.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: m3query
+  namespace: demo
+spec:
+  serviceName: m3query
+  replicas: 1
+  selector:
+    matchLabels:
+      app: m3query
+  template:
+    metadata:
+      labels:
+        app: m3query
+    spec:
+      containers:
+        - name: m3query
+          image: quay.io/m3/m3query:latest
+          command:
+            - m3query
+          args:
+            - "-f"
+            - "/etc/m3/m3query.yaml"
+          ports:
+            - containerPort: 7201
+            - containerPort: 7203
+          volumeMounts:
+            - name: config
+              mountPath: /etc/m3/
+      volumes:
+        - name: config
+          configMap:
+            defaultMode: 420
+            name: m3query-config
