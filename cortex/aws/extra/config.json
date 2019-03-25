@@ -1,0 +1,7 @@
+{
+  "rules_files": {
+    "alert1.json" : "{\r\n  \"groups\": [\r\n    {\r\n      \"name\": \"example\",\r\n      \"interval\": \"30s\",\r\n      \"rules\": [\r\n        {\r\n          \"alert\": \"DeadMansSwitch\",\r\n          \"expr\": \"kubelet_running_pod_count > 10\",\r\n          \"for\": \"10s\",\r\n          \"labels\": {\r\n            \"severity\": \"page\"\r\n          },\r\n          \"annotations\": {\r\n            \"summary\": \"High number of pods\"\r\n          }\r\n        }\r\n      ]\r\n    }\r\n  ]\r\n}"
+  },
+  "rule_format_version": "2",
+  "alertmanager_config": "{\r\n  \"global\": {\r\n    \"resolve_timeout\": \"5m\"\r\n  },\r\n  \"route\": {\r\n    \"group_by\": [\r\n      \"job\"\r\n    ],\r\n    \"group_wait\": \"30s\",\r\n    \"group_interval\": \"5m\",\r\n    \"repeat_interval\": \"12h\",\r\n    \"receiver\": \"slack\",\r\n    \"routes\": [\r\n      {\r\n        \"match\": {\r\n          \"alertname\": \"DeadMansSwitch\"\r\n        },\r\n        \"receiver\": \"slack\"\r\n      }\r\n    ]\r\n  },\r\n  \"receivers\": [\r\n    {\r\n      \"name\": \"slack\",\r\n      \"slack_configs\": [\r\n        {\r\n          \"api_url\": \"https:\/\/hooks.slack.com\/services\/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\"\r\n        }\r\n      ]\r\n    }\r\n  ]\r\n}"
+}
