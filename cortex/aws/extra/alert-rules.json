@@ -1,0 +1,21 @@
+{
+  "groups": [
+    {
+      "name": "example",
+      "interval": "30s",
+      "rules": [
+        {
+          "alert": "DeadMansSwitch",
+          "expr": "alert > 0",
+          "for": "10s",
+          "labels": {
+            "severity": "page"
+          },
+          "annotations": {
+            "summary": "High number of pods"
+          }
+        }
+      ]
+    }
+  ]
+}

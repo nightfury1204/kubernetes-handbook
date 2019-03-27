@@ -1,0 +1,25 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: table-manager
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: table-manager
+    spec:
+      containers:
+      - name: table-manager
+        image: quay.io/cortexproject/table-manager
+        imagePullPolicy: IfNotPresent
+        args:
+        - -server.http-listen-port=80
+        - -dynamodb.original-table-name=cortex
+        - -dynamodb.url=dynamodb://user:pass@dynamodb.default.svc.cluster.local:8000
+        - -dynamodb.periodic-table.prefix=cortex_weekly_
+        - -dynamodb.periodic-table.from=2019-02-14
+        - -dynamodb.chunk-table.from=2019-02-14
+        ports:
+        - containerPort: 80

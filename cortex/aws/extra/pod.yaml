@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: prom-demo
+  namespace: default
+  labels:
+    app: prometheus-demo
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+spec:
+  containers:
+  - name: prom-demo
+    image: nightfury1204/prometheus-demo-app:canary
+    ports:
+    - containerPort: 8080
