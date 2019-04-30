@@ -1,0 +1,24 @@
+apiVersion: operator.m3db.io/v1alpha1
+kind: M3DBCluster
+metadata:
+  name: simple-cluster
+  namespace: demo
+spec:
+  image: quay.io/m3db/m3dbnode:latest
+  replicationFactor: 1
+  numberOfShards: 16
+  isolationGroups:
+    - numInstances: 0
+  podIdentityConfig:
+    sources:
+      - PodUID
+  namespaces:
+    - name: metrics-10s:2d
+      preset: 10s:2d
+  containerResources:
+    requests:
+      memory: "1.5Gi"
+      cpu: "250m"
+    limits:
+      memory: "1.5Gi"
+      cpu: "250m"
