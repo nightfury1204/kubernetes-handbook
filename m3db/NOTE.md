@@ -405,6 +405,13 @@ solution: https://operator.m3db.io/configuration/pod_identity/
      - resolveClusterNamespacesForQuery: /home/ac/go/src/github.com/m3db/m3/src/query/storage/m3/cluster_resolver.go#75
         - First check if the unaggregated cluster can fully satisfy the query range. If so, return it and shortcircuit, as unaggregated will necessarily have every metric.
         - If any of the aggregated clusters have a complete set of metrics, use those that have the smallest resolutions, supplemented by lower resolution partially aggregated metrics.
+
+- m3coordiantor:
+    - https://gist.github.com/schallert/66d9d7b1cd1d870a5ee520e0fd193ff6
+
+- m3db client example: 
+    - https://gist.github.com/benraskin92/58585a9c97a07857e616edd2d50afd2d
+
 Questions:
 
 ``` 
