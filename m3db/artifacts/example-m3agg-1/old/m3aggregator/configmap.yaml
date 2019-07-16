@@ -78,7 +78,7 @@ data:
 
     kvClient:
       etcd:
-        env: demo/simple-cluster
+        env: default_env
         zone: embedded
         service: m3aggregator
         cacheDir: /var/lib/m3kv
@@ -91,7 +91,7 @@ data:
              - http://etcd-2.etcd:2379
     runtimeOptions:
       kvConfig:
-        environment: demo/simple-cluster
+        environment: default_env
         zone: embedded
       writeValuesPerMetricLimitPerSecondKey: write-values-per-metric-limit-per-second
       writeValuesPerMetricLimitPerSecond: 0
@@ -138,7 +138,7 @@ data:
         placementKV:
           namespace: /placement
           zone: embedded
-          environment: demo/simple-cluster
+          environment: default_env
         placementWatcher:
           key: m3aggregator
           initWatchTimeout: 15s
@@ -171,7 +171,7 @@ data:
       placementManager:
         kvConfig:
           namespace: /placement
-          environment: demo/simple-cluster
+          environment: default_env
           zone: embedded
         placementWatcher:
           key: m3aggregator
@@ -179,12 +179,12 @@ data:
       hashType: murmur32
       bufferDurationBeforeShardCutover: 10m
       bufferDurationAfterShardCutoff: 10m
-      bufferDurationForPastTimedMetric: 1m
-      bufferDurationForFutureTimedMetric: 1m
+      bufferDurationForPastTimedMetric: 10m
+      bufferDurationForFutureTimedMetric: 10m
       resignTimeout: 1m
       flushTimesManager:
         kvConfig:
-          environment: demo/simple-cluster
+          environment: default_env
           zone: embedded
         flushTimesKeyFmt: shardset/%d/flush
         flushTimesPersistRetrier:
@@ -199,7 +199,7 @@ data:
           ttlSeconds: 10
         serviceID:
           name: m3aggregator
-          environment: demo/simple-cluster
+          environment: default_env
           zone: embedded
         electionKeyFmt: shardset/%d/lock
         campaignRetrier:
@@ -230,15 +230,15 @@ data:
             maxJitterPercent: 1.0
           - flushInterval: 10s
             maxJitterPercent: 0.5
-          #- flushInterval: 1m
-          #  maxJitterPercent: 0.5
-          #- flushInterval: 10m
-          #  maxJitterPercent: 0.5
-          #- flushInterval: 1h
-          #  maxJitterPercent: 0.25
+          - flushInterval: 1m
+            maxJitterPercent: 0.5
+          - flushInterval: 10m
+            maxJitterPercent: 0.5
+          - flushInterval: 1h
+            maxJitterPercent: 0.25
         numWorkersPerCPU: 0.5
         flushTimesPersistEvery: 10s
-        maxBufferSize: 10s
+        maxBufferSize: 5m
         forcedFlushWindowSize: 10s
       flush:
         handlers:
@@ -252,7 +252,7 @@ data:
                   topicName: aggregated_metrics
                   topicServiceOverride:
                     zone: embedded
-                    environment: demo/simple-cluster
+                    environment: default_env
                   messageRetry:
                     initialBackoff: 1m
                     maxBackoff: 2m
@@ -267,7 +267,7 @@ data:
                       initialBackoff: 1s
                       maxBackoff: 10s
                     flushInterval: 1s
-                    writeBufferSize: 100
+                    writeBufferSize: 16384
                     readBufferSize: 256
       forwarding:
         maxSingleDelay: 5s

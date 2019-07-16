@@ -58,7 +58,6 @@ spec:
       containers:
         - name: m3coordinator
           image: nightfury1204/m3coordinator:canary
-          imagePullPolicy: Always
           command:
             - m3coordinator
           args:

@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: m3coordinator
+  name: m3aggregator-copy
   namespace: demo
 spec:
   selector:
-    app: m3coordinator
+    app: m3aggregator-copy
   ports:
     - port: 7201
       protocol: TCP
@@ -13,61 +13,41 @@ spec:
     - port: 7203
       protocol: TCP
       name: metric
-    - port: 7507
+    - port: 6000
       protocol: TCP
-      name: m3msg
-  type: ClusterIP
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: m3crdntr
-  namespace: demo
-spec:
-  selector:
-    app: m3coordinator
-  ports:
-    - port: 7201
-      protocol: TCP
-      name: client
-    - port: 7203
-      protocol: TCP
-      name: metric
-    - port: 7507
-      protocol: TCP
-      name: m3msg
+      name: com
   clusterIP: None
 ---
 # Source: m3db-operator/templates/stateful_set.yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: m3coordinator
+  name: m3aggregator-copy
   namespace: demo
 spec:
-  serviceName: m3crdntr
+  serviceName: m3aggregator-copy
   replicas: 1
   selector:
     matchLabels:
-      app: m3coordinator
+      app: m3aggregator-copy
   template:
     metadata:
       labels:
-        app: m3coordinator
+        app: m3aggregator-copy
     spec:
       containers:
-        - name: m3coordinator
-          image: nightfury1204/m3coordinator:canary
+        - name: m3aggregator
+          image: nightfury1204/m3aggregator:latest
           imagePullPolicy: Always
           command:
-            - m3coordinator
+            - m3aggregator
           args:
             - "-f"
-            - "/etc/m3/m3coordinator.yaml"
+            - "/etc/m3/m3aggregator.yaml"
           ports:
             - containerPort: 7201
             - containerPort: 7203
-            - containerPort: 7507
+            - containerPort: 6000
           volumeMounts:
             - name: config
               mountPath: /etc/m3/
@@ -75,4 +55,4 @@ spec:
         - name: config
           configMap:
             defaultMode: 420
-            name: m3coordinator-config
+            name: m3aggregator-config

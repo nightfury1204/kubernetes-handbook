@@ -26,14 +26,14 @@ data:
              retention: 30m
              resolution: 30s
              type: unaggregated
-           - namespace: metrics-agg-2
+           - namespace: metrics-agg
              retention: 48h
-             resolution: 5m
+             resolution: 3m
              type: aggregated
          client:
            config:
              service:
-               env: demo/simple-cluster
+               env: default_env
                zone: embedded
                service: m3db
                cacheDir: /var/lib/m3kv
@@ -74,8 +74,7 @@ data:
             initWatchTimeout: 10s
           hashType: murmur32
           shardCutoffLingerDuration: 1m
-          # to control flush
-          flushSize: 100
+          flushSize: 1440
           maxTimerBatchSize: 1120
           queueSize: 10000
           queueDropType: oldest
@@ -97,9 +96,9 @@ data:
     # This is for configuring the ingestion server that will receive metrics from the m3aggregators on port 7507
     ingest:
       ingester:
-        workerPoolSize: 1
+        workerPoolSize: 100
         opPool:
-          size: 1
+          size: 100
         retry:
           maxRetries: 3
           jitter: true

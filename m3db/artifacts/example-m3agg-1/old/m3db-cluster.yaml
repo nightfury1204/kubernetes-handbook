@@ -4,13 +4,9 @@ metadata:
   name: simple-cluster
   namespace: demo
 spec:
-  image: quay.io/m3db/m3dbnode:v0.10.2
+  image: quay.io/m3db/m3dbnode:v0.7.3
   replicationFactor: 1
   numberOfShards: 16
-  etcdEndpoints:
-    - http://etcd-0.etcd:2379
-    - http://etcd-1.etcd:2379
-    - http://etcd-2.etcd:2379
   isolationGroups:
     - name: us-central1-a
       numInstances: 1
@@ -44,28 +40,10 @@ spec:
         snapshotEnabled: true
         repairEnabled: false
         retentionOptions:
-          retentionPeriod: 6h
-          blockSize: 2h
-          bufferFuture: 20m
-          bufferPast: 20m
-          blockDataExpiry: true
-          blockDataExpiryAfterNotAccessPeriod: 5m
-        indexOptions:
-          enabled: true
-          blockSize: 2h
-    - name: metrics-agg-2
-      options:
-        bootstrapEnabled: true
-        flushEnabled: true
-        writesToCommitLog: true
-        cleanupEnabled: true
-        snapshotEnabled: true
-        repairEnabled: false
-        retentionOptions:
           retentionPeriod: 48h
           blockSize: 2h
           bufferFuture: 20m
-          bufferPast: 50m
+          bufferPast: 20m
           blockDataExpiry: true
           blockDataExpiryAfterNotAccessPeriod: 5m
         indexOptions:

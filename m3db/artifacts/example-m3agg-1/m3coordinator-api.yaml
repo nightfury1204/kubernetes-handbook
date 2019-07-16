@@ -1,7 +1,57 @@
 apiVersion: v1
+kind: Service
+metadata:
+  name: m3coordinator-api
+  namespace: demo
+spec:
+  selector:
+    app: m3coorntr-api
+  ports:
+    - port: 7201
+      protocol: TCP
+      name: client
+    - port: 7203
+      protocol: TCP
+      name: metric
+    - port: 7507
+      protocol: TCP
+      name: m3msg
+  type: ClusterIP
+---
+# Source: m3db-operator/templates/stateful_set.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: m3coordinator-for-api
+  namespace: demo
+  labels:
+    app: m3coorntr-api
+spec:
+  containers:
+    - name: m3coordinator
+      image: quay.io/m3/m3coordinator:latest
+      command:
+        - m3coordinator
+      args:
+        - "-f"
+        - "/etc/m3/m3coordinator.yaml"
+      ports:
+        - containerPort: 7201
+        - containerPort: 7203
+        - containerPort: 7507
+      volumeMounts:
+        - name: config
+          mountPath: /etc/m3/
+  volumes:
+    - name: config
+      configMap:
+        defaultMode: 420
+        name: m3coordinator-api-config
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: m3coordinator-config
+  name: m3coordinator-api-config
   namespace: demo
 data:
   m3coordinator.yaml: |
@@ -26,9 +76,9 @@ data:
              retention: 30m
              resolution: 30s
              type: unaggregated
-           - namespace: metrics-agg-2
+           - namespace: metrics-agg
              retention: 48h
-             resolution: 5m
+             resolution: 3m
              type: aggregated
          client:
            config:
@@ -63,50 +113,3 @@ data:
            backgroundHealthCheckFailThrottleFactor: 0.5
     tagOptions:
       idScheme: quoted
-    # This is for sending metrics to the remote m3aggregators
-    downsample:
-      remoteAggregator:
-        client:
-          placementKV:
-            namespace: /placement
-          placementWatcher:
-            key: m3aggregator
-            initWatchTimeout: 10s
-          hashType: murmur32
-          shardCutoffLingerDuration: 1m
-          # to control flush
-          flushSize: 100
-          maxTimerBatchSize: 1120
-          queueSize: 10000
-          queueDropType: oldest
-          encoder:
-            initBufferSize: 2048
-            maxMessageSize: 10485760
-            bytesPool:
-              buckets:
-                - capacity: 2048
-                  count: 4096
-                - capacity: 4096
-                  count: 4096
-              watermark:
-                low: 0.7
-                high: 1.0
-          connection:
-            writeTimeout: 250ms
-
-    # This is for configuring the ingestion server that will receive metrics from the m3aggregators on port 7507
-    ingest:
-      ingester:
-        workerPoolSize: 1
-        opPool:
-          size: 1
-        retry:
-          maxRetries: 3
-          jitter: true
-        logSampleRate: 0.99
-      m3msg:
-        server:
-          listenAddress: "0.0.0.0:7507"
-          retry:
-            maxBackoff: 10s
-            jitter: true
