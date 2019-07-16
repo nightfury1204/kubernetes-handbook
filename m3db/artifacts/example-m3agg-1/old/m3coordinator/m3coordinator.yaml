@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: m3coordinator
+  namespace: demo
+spec:
+  selector:
+    app: m3coordinator
+  ports:
+    - port: 7201
+      protocol: TCP
+      name: client
+    - port: 7203
+      protocol: TCP
+      name: metric
+    - port: 7507
+      protocol: TCP
+      name: m3msg
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: m3crdntr
+  namespace: demo
+spec:
+  selector:
+    app: m3coordinator
+  ports:
+    - port: 7201
+      protocol: TCP
+      name: client
+    - port: 7203
+      protocol: TCP
+      name: metric
+    - port: 7507
+      protocol: TCP
+      name: m3msg
+  clusterIP: None
+---
+# Source: m3db-operator/templates/stateful_set.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: m3coordinator
+  namespace: demo
+spec:
+  serviceName: m3crdntr
+  replicas: 1
+  selector:
+    matchLabels:
+      app: m3coordinator
+  template:
+    metadata:
+      labels:
+        app: m3coordinator
+    spec:
+      containers:
+        - name: m3coordinator
+          image: nightfury1204/m3coordinator:canary
+          command:
+            - m3coordinator
+          args:
+            - "-f"
+            - "/etc/m3/m3coordinator.yaml"
+          ports:
+            - containerPort: 7201
+            - containerPort: 7203
+            - containerPort: 7507
+          volumeMounts:
+            - name: config
+              mountPath: /etc/m3/
+      volumes:
+        - name: config
+          configMap:
+            defaultMode: 420
+            name: m3coordinator-config

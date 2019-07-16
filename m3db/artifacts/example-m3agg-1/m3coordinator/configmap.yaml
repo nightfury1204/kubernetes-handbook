@@ -1,0 +1,112 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: m3coordinator-config
+  namespace: demo
+data:
+  m3coordinator.yaml: |
+    listenAddress:
+      type: "config"
+      value: "0.0.0.0:7201"
+
+    metrics:
+      scope:
+        prefix: "coordinator"
+      prometheus:
+        handlerPath: /metrics
+        listenAddress: 0.0.0.0:7203 # until https://github.com/m3db/m3/issues/682 is resolved
+      sanitization: prometheus
+      samplingRate: 1.0
+      extended: none
+
+    clusters:
+       - namespaces:
+    # We created a namespace called "default" and had set it to retention "48h".
+           - namespace: metrics-unagg
+             retention: 30m
+             resolution: 30s
+             type: unaggregated
+           - namespace: metrics-agg-2
+             retention: 48h
+             resolution: 5m
+             type: aggregated
+         client:
+           config:
+             service:
+               env: demo/simple-cluster
+               zone: embedded
+               service: m3db
+               cacheDir: /var/lib/m3kv
+               etcdClusters:
+                 - zone: embedded
+                   endpoints:
+                    # We have five M3DB nodes but only three are seed nodes, they are listed here.
+                     - http://etcd-0.etcd:2379
+                     - http://etcd-1.etcd:2379
+                     - http://etcd-2.etcd:2379
+           writeConsistencyLevel: majority
+           readConsistencyLevel: unstrict_majority
+           writeTimeout: 10s
+           fetchTimeout: 15s
+           connectTimeout: 20s
+           writeRetry:
+             initialBackoff: 500ms
+             backoffFactor: 3
+             maxRetries: 2
+             jitter: true
+           fetchRetry:
+             initialBackoff: 500ms
+             backoffFactor: 2
+             maxRetries: 3
+             jitter: true
+           backgroundHealthCheckFailLimit: 4
+           backgroundHealthCheckFailThrottleFactor: 0.5
+    tagOptions:
+      idScheme: quoted
+    # This is for sending metrics to the remote m3aggregators
+    downsample:
+      remoteAggregator:
+        client:
+          placementKV:
+            namespace: /placement
+          placementWatcher:
+            key: m3aggregator
+            initWatchTimeout: 10s
+          hashType: murmur32
+          shardCutoffLingerDuration: 1m
+          # to control flush
+          flushSize: 100
+          maxTimerBatchSize: 1120
+          queueSize: 10000
+          queueDropType: oldest
+          encoder:
+            initBufferSize: 2048
+            maxMessageSize: 10485760
+            bytesPool:
+              buckets:
+                - capacity: 2048
+                  count: 4096
+                - capacity: 4096
+                  count: 4096
+              watermark:
+                low: 0.7
+                high: 1.0
+          connection:
+            writeTimeout: 250ms
+
+    # This is for configuring the ingestion server that will receive metrics from the m3aggregators on port 7507
+    ingest:
+      ingester:
+        workerPoolSize: 1
+        opPool:
+          size: 1
+        retry:
+          maxRetries: 3
+          jitter: true
+        logSampleRate: 0.99
+      m3msg:
+        server:
+          listenAddress: "0.0.0.0:7507"
+          retry:
+            maxBackoff: 10s
+            jitter: true

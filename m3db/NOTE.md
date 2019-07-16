@@ -592,3 +592,40 @@ Seems to have worked:
       capacity: 1000000
       maxSamplesPerSend: 100000
 ```
+
+
+### Set rlimit
+
+```
+genericgithubuser @genericgithubuser 09:21
+I'm trying to run m3 on k8s but without the operator for now. A separate team runs the k8s cluster, and I've had them verify and re-verify they've made the kernel changes. This is from the node one of my m3dbnodes runs on:
+[root@ip-10-72-1-22 ~]# sysctl vm.max_map_count fs.nr_open fs.file-max
+vm.max_map_count = 3000000
+fs.nr_open = 3000000
+fs.file-max = 3000000
+
+But running my pod with quay.io/m3/m3dbnode:latest, I still see a steady stream of:
+{"level":"warn","ts":1562293214.089953,"msg":"invalid configuration found, refer to linked documentation for more information","url":"https://m3db.github.io/m3/operational_guide/kernel_configuration","error":"current value for RLIMIT_NOFILE(65536) is below recommended threshold(3000000)\nmax value for RLIMIT_NOFILE(65536) is below recommended threshold(3000000)\ncurrent value for vm.swappiness(30) is above recommended threshold(1)","errorCauses":[{"error":"current value for vm.swappiness(30) is above recommended threshold(1)"},{"error":"current value for RLIMIT_NOFILE(65536) is below recommended threshold(3000000)"},{"error":"max value for RLIMIT_NOFILE(65536) is below recommended threshold(3000000)"}]}
+
+I'm guessing I'm missing somewhere (or some other way) this needs to be updated. Has anyone else ran into this that can give an idea of where this would need to change at?
+
+genericgithubuser @genericgithubuser 10:30
+Oh, looking from the pod, I do see the sysctl settings took, but it seems I'll need to find a way to get this to actually play nice:
+/ # cat /proc/sys/fs/nr_open
+3000000
+/ # sysctl -n fs.nr_open
+3000000
+/ # sysctl -n fs.file-max
+3000000
+/ # cat /proc/self/limits | grep files
+Max open files 65536 65536 files
+Rob Skillington @robskillington 10:31
+@genericgithubuser ah yeah
+the easiest thing is to launch m3dbnode (using your own dockerfile)
+and bash -c "ulimit -n 3000000 && ./m3dbnode -f /etc/m3dbnode/m3dbnode.yml"
+we are releasing soon a version of M3DB that calls this setrlimit itself (what ulimit does)
+@genericgithubuser actually, we do already do this
+can you try starting the process with
+PROCESS_LIMITS_RAISE=true?
+
+```

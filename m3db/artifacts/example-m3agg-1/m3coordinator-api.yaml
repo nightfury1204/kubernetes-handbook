@@ -1,0 +1,115 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: m3coordinator-api
+  namespace: demo
+spec:
+  selector:
+    app: m3coorntr-api
+  ports:
+    - port: 7201
+      protocol: TCP
+      name: client
+    - port: 7203
+      protocol: TCP
+      name: metric
+    - port: 7507
+      protocol: TCP
+      name: m3msg
+  type: ClusterIP
+---
+# Source: m3db-operator/templates/stateful_set.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: m3coordinator-for-api
+  namespace: demo
+  labels:
+    app: m3coorntr-api
+spec:
+  containers:
+    - name: m3coordinator
+      image: quay.io/m3/m3coordinator:latest
+      command:
+        - m3coordinator
+      args:
+        - "-f"
+        - "/etc/m3/m3coordinator.yaml"
+      ports:
+        - containerPort: 7201
+        - containerPort: 7203
+        - containerPort: 7507
+      volumeMounts:
+        - name: config
+          mountPath: /etc/m3/
+  volumes:
+    - name: config
+      configMap:
+        defaultMode: 420
+        name: m3coordinator-api-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: m3coordinator-api-config
+  namespace: demo
+data:
+  m3coordinator.yaml: |
+    listenAddress:
+      type: "config"
+      value: "0.0.0.0:7201"
+
+    metrics:
+      scope:
+        prefix: "coordinator"
+      prometheus:
+        handlerPath: /metrics
+        listenAddress: 0.0.0.0:7203 # until https://github.com/m3db/m3/issues/682 is resolved
+      sanitization: prometheus
+      samplingRate: 1.0
+      extended: none
+
+    clusters:
+       - namespaces:
+    # We created a namespace called "default" and had set it to retention "48h".
+           - namespace: metrics-unagg
+             retention: 30m
+             resolution: 30s
+             type: unaggregated
+           - namespace: metrics-agg
+             retention: 48h
+             resolution: 3m
+             type: aggregated
+         client:
+           config:
+             service:
+               env: demo/simple-cluster
+               zone: embedded
+               service: m3db
+               cacheDir: /var/lib/m3kv
+               etcdClusters:
+                 - zone: embedded
+                   endpoints:
+                    # We have five M3DB nodes but only three are seed nodes, they are listed here.
+                     - http://etcd-0.etcd:2379
+                     - http://etcd-1.etcd:2379
+                     - http://etcd-2.etcd:2379
+           writeConsistencyLevel: majority
+           readConsistencyLevel: unstrict_majority
+           writeTimeout: 10s
+           fetchTimeout: 15s
+           connectTimeout: 20s
+           writeRetry:
+             initialBackoff: 500ms
+             backoffFactor: 3
+             maxRetries: 2
+             jitter: true
+           fetchRetry:
+             initialBackoff: 500ms
+             backoffFactor: 2
+             maxRetries: 3
+             jitter: true
+           backgroundHealthCheckFailLimit: 4
+           backgroundHealthCheckFailThrottleFactor: 0.5
+    tagOptions:
+      idScheme: quoted
