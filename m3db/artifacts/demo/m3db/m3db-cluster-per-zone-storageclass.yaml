@@ -1,0 +1,133 @@
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: fast-us-central1-a
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-ssd
+  zone: us-central1-a
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: fast-us-central1-b
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-ssd
+  zone: us-central1-b
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: fast-us-central1-c
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-ssd
+  zone: us-central1-c
+---
+apiVersion: operator.m3db.io/v1alpha1
+kind: M3DBCluster
+metadata:
+  name: simple-cluster
+  namespace: demo
+spec:
+  image: quay.io/m3db/m3dbnode:v0.10.2
+  replicationFactor: 3
+  numberOfShards: 64
+  isolationGroups:
+    - name: group-1
+      numInstances: 1
+      storageClassName: fast-us-central1-a
+      nodeAffinityTerms:
+        - key: failure-domain.beta.kubernetes.io/zone
+          values:
+            - us-central1-a
+    - name: group-2
+      numInstances: 1
+      storageClassName: fast-us-central1-b
+      nodeAffinityTerms:
+        - key: failure-domain.beta.kubernetes.io/zone
+          values:
+            - us-central1-b
+    - name: group-3
+      numInstances: 1
+      storageClassName: fast-us-central1-c
+      nodeAffinityTerms:
+        - key: failure-domain.beta.kubernetes.io/zone
+          values:
+            - us-central1-c
+  etcdEndpoints:
+    - http://etcd-0.etcd:2379
+    - http://etcd-1.etcd:2379
+    - http://etcd-2.etcd:2379
+  podIdentityConfig:
+    # Using no sources will default to just PodName, which is what we want as
+    # remote PVs can move around with the pod
+    sources: []
+  namespaces:
+    - name: metrics-unagg
+      options:
+        bootstrapEnabled: true
+        flushEnabled: true
+        writesToCommitLog: true
+        cleanupEnabled: true
+        snapshotEnabled: true
+        repairEnabled: false
+        retentionOptions:
+          retentionPeriod: 30m
+          blockSize: 30m
+          bufferFuture: 5m
+          bufferPast: 5m
+          blockDataExpiry: true
+          blockDataExpiryAfterNotAccessPeriod: 5m
+        indexOptions:
+          enabled: true
+          blockSize: 30m
+    - name: metrics-agg-1d
+      options:
+        bootstrapEnabled: true
+        flushEnabled: true
+        writesToCommitLog: true
+        cleanupEnabled: true
+        snapshotEnabled: true
+        repairEnabled: false
+        retentionOptions:
+          retentionPeriod: 24h
+          blockSize: 2h
+          bufferFuture: 20m
+          bufferPast: 20m
+          blockDataExpiry: true
+          blockDataExpiryAfterNotAccessPeriod: 5m
+        indexOptions:
+          enabled: true
+          blockSize: 2h
+    - name: metrics-agg-7d
+      options:
+        bootstrapEnabled: true
+        flushEnabled: true
+        writesToCommitLog: true
+        cleanupEnabled: true
+        snapshotEnabled: true
+        repairEnabled: false
+        retentionOptions:
+          retentionPeriod: 168h
+          blockSize: 2h
+          bufferFuture: 20m
+          bufferPast: 20m
+          blockDataExpiry: true
+          blockDataExpiryAfterNotAccessPeriod: 5m
+        indexOptions:
+          enabled: true
+          blockSize: 2h
+  dataDirVolumeClaimTemplate:
+    metadata:
+      name: m3db-data
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      # this field will be overwritten per-statefulset
+      storageClassName: unused
+      resources:
+        requests:
+          storage: 20Gi

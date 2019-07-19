@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: reverse-proxy
+  namespace: demo
+spec:
+  selector:
+    app: reverse-proxy
+  ports:
+    - port: 8443
+      protocol: TCP
+      name: https
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: reverse-proxy
+  namespace: demo
+spec:
+  selector:
+    matchLabels:
+      app: reverse-proxy
+  serviceName: reverse-proxy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: reverse-proxy
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: reverse-proxy
+          image: nightfury1204/prom-query-handler:canary
+          imagePullPolicy: Always
+          args:
+            - "run"
+            - "--tls.cert-file=/etc/reverse-proxy/tls/server.cert"
+            - "--tls.key-file=/etc/reverse-proxy/tls/server.key"
+            - "--alertmanager-addr=http://alertmanager-svc.demo.svc:8443"
+            - "--auth.token=0143b0e15058a2d314e10291c7c5b34f6e9dd8e1"
+            - "--auth.api-url=http://demo-auth.demo.svc:8443/api/v1/user/licenses/verify"
+            - "--m3coordinator-addr=http://m3coordinator.demo.svc:7201"
+            - "--ruler-addr=http://ruler-svc.demo.svc:8443"
+            - "--query-engine-addr=http://m3query.demo.svc:7201"
+          ports:
+            - containerPort: 8443
+              name: api
+          volumeMounts:
+            - name: tls
+              mountPath: /etc/reverse-proxy/tls/
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+      volumes:
+        - name: tls
+          secret:
+            secretName: reverse-proxy-certs

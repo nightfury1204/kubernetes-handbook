@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: metric-exporter-1
+  namespace: demo
+  labels:
+    app: metric-exporter
+spec:
+  containers:
+    - name: metric-exporter
+      image: nightfury1204/prometheus-remote-metric-writer:canary
+      imagePullPolicy: Always
+      args:
+        - "-v=10"
+        - "--metrics-exporter.insecure-skip-verify"
+        - "--metrics-exporter.id=1"
+        - "--metrics-exporter.url=https://reverse-proxy.demo.svc:8443/write/api/v1/prom/remote/write"
+        - "--metrics-exporter.license=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJqZWN0IjoiMSIsImlzc3VlciI6Im1lIn0.17qs8WhftsMZrULb4YS0Ntfw8q8iVr_I9EiJjb69bVw"
+      ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: metric-exporter-2
+  namespace: demo
+  labels:
+    app: metric-exporter
+spec:
+  containers:
+    - name: metric-exporter
+      image: nightfury1204/prometheus-remote-metric-writer:canary
+      imagePullPolicy: Always
+      args:
+        - "-v=10"
+        - "--metrics-exporter.insecure-skip-verify"
+        - "--metrics-exporter.id=2"
+        - "--metrics-exporter.url=https://reverse-proxy.demo.svc:8443/write/api/v1/prom/remote/write"
+        - "--metrics-exporter.license=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJqZWN0IjoiMiIsImlzc3VlciI6Im1lIn0.Ce5-8HafZPUF01b5AizAbm_JHUmpFjskoFvEdwO8PtY"
+      ports:
+        - containerPort: 8080
