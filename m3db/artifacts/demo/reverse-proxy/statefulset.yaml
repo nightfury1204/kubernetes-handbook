@@ -44,6 +44,7 @@ spec:
             - "--m3coordinator-addr=http://m3coordinator.demo.svc:7201"
             - "--ruler-addr=http://ruler-svc.demo.svc:8443"
             - "--query-engine-addr=http://m3query.demo.svc:7201"
+            - "--v=10"
           ports:
             - containerPort: 8443
               name: api

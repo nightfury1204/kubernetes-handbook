@@ -18,6 +18,21 @@ spec:
         - "--metrics-exporter.license=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJqZWN0IjoiMSIsImlzc3VlciI6Im1lIn0.17qs8WhftsMZrULb4YS0Ntfw8q8iVr_I9EiJjb69bVw"
       ports:
         - containerPort: 8080
+      env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: SERVICE_NAME
+          value: nothing
 ---
 apiVersion: v1
 kind: Pod
@@ -39,3 +54,19 @@ spec:
         - "--metrics-exporter.license=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJqZWN0IjoiMiIsImlzc3VlciI6Im1lIn0.Ce5-8HafZPUF01b5AizAbm_JHUmpFjskoFvEdwO8PtY"
       ports:
         - containerPort: 8080
+      env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: SERVICE_NAME
+          value: nothing
+
